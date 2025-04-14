@@ -1,0 +1,107 @@
+<h1 class="text-2xl font-bold mb-6">Pokémon Dashboard</h1>
+
+<% if (locals.error) { %>
+  <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+    <p><%= error %></p>
+  </div>
+<% } %>
+
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+  <% pokemon.forEach(poke => { %>
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-4 text-center">
+        <a href="/pokemon/<%= poke.id %>" class="block"><img src="<%= poke.sprite %>" alt="<%= poke.name %>" class="mx-auto h-32 w-32"></a>
+        
+        <a href="/pokemon/<%= poke.id %>" class="block">
+          <h2 class="capitalize text-lg font-semibold mt-2 hover:text-blue-600"><%= poke.name %></h2>
+        </a>
+        
+        <div class="flex justify-center gap-2 mt-2">
+          <% poke.types.forEach(type => { %>
+            <span class="px-2 py-1 text-xs font-semibold rounded-full text-white bg-<%= type %>">
+              <%= type %>
+            </span>
+          <% }) %>
+        </div>
+        
+        <button 
+          data-id="<%= poke.id %>"
+          data-name="<%= poke.name %>"
+          data-sprite="<%= poke.sprite %>"
+          data-types="<%= JSON.stringify(poke.types) %>"
+          class="favorite-btn mt-4 px-3 py-1 rounded-md <%= poke.isFavorite ? 'bg-gray-300 text-gray-700' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-800' %>"
+        >
+          <%= poke.isFavorite ? 'Remove from Favorites' : 'Add to Favorites' %>
+        </button>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<style>
+  .bg-normal { background-color: #A8A878; }
+  .bg-fire { background-color: #F08030; }
+  .bg-water { background-color: #6890F0; }
+  .bg-grass { background-color: #78C850; }
+  .bg-electric { background-color: #F8D030; }
+  .bg-ice { background-color: #98D8D8; }
+  .bg-fighting { background-color: #C03028; }
+  .bg-poison { background-color: #A040A0; }
+  .bg-ground { background-color: #E0C068; }
+  .bg-flying { background-color: #A890F0; }
+  .bg-psychic { background-color: #F85888; }
+  .bg-bug { background-color: #A8B820; }
+  .bg-rock { background-color: #B8A038; }
+  .bg-ghost { background-color: #705898; }
+  .bg-dragon { background-color: #7038F8; }
+  .bg-dark { background-color: #705848; }
+  .bg-steel { background-color: #B8B8D0; }
+  .bg-fairy { background-color: #EE99AC; }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.favorite-btn');
+    
+    buttons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const pokemonId = button.dataset.id;
+        const name = button.dataset.name;
+        const sprite = button.dataset.sprite;
+        const types = JSON.parse(button.dataset.types);
+        const isFavorite = button.textContent.trim() === 'Remove from Favorites';
+        
+        try {
+          if (isFavorite) {
+            // Remove from favorites
+            await fetch(`/api/favorites/${pokemonId}`, {
+              method: 'DELETE',
+            });
+            button.textContent = 'Add to Favorites';
+            button.classList.remove('bg-gray-300', 'text-gray-700');
+            button.classList.add('bg-yellow-400', 'hover:bg-yellow-500', 'text-gray-800');
+          } else {
+            // Add to favorites
+            await fetch('/api/favorites', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                pokemonId,
+                name,
+                sprite,
+                types
+              }),
+            });
+            button.textContent = 'Remove from Favorites';
+            button.classList.remove('bg-yellow-400', 'hover:bg-yellow-500', 'text-gray-800');
+            button.classList.add('bg-gray-300', 'text-gray-700');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+    });
+  });
+</script>

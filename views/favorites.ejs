@@ -1,0 +1,101 @@
+<h1 class="text-2xl font-bold mb-6">Your Favorite Pokémon</h1>
+
+<% if (locals.error) { %>
+  <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+    <p><%= error %></p>
+  </div>
+<% } %>
+
+<% if (favorites.length === 0) { %>
+  <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
+    <p>You haven't saved any favorites yet. Go to the dashboard to add some!</p>
+  </div>
+<% } else { %>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    <% favorites.forEach(poke => { %>
+      <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-4 text-center">
+          <img src="<%= poke.sprite %>" alt="<%= poke.name %>" class="mx-auto h-32 w-32">
+          <a href="/pokemon/<%= poke.pokemonId %>" class="block">
+            <h2 class="capitalize text-lg font-semibold mt-2 hover:text-blue-600"><%= poke.name %></h2>
+          </a>
+          
+          <div class="flex justify-center gap-2 mt-2">
+            <% poke.types.forEach(type => { %>
+              <span class="px-2 py-1 text-xs font-semibold rounded-full text-white bg-<%= type %>">
+                <%= type %>
+              </span>
+            <% }) %>
+          </div>
+          
+          <div class="text-xs text-gray-500 mt-2">
+            Added on <%= new Date(poke.dateAdded).toLocaleDateString() %>
+          </div>
+          
+          <button 
+            data-id="<%= poke.pokemonId %>"
+            class="remove-btn mt-4 px-3 py-1 rounded-md bg-red-500 hover:bg-red-600 text-white"
+          >
+            Remove from Favorites
+          </button>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<style>
+  .bg-normal { background-color: #A8A878; }
+  .bg-fire { background-color: #F08030; }
+  .bg-water { background-color: #6890F0; }
+  .bg-grass { background-color: #78C850; }
+  .bg-electric { background-color: #F8D030; }
+  .bg-ice { background-color: #98D8D8; }
+  .bg-fighting { background-color: #C03028; }
+  .bg-poison { background-color: #A040A0; }
+  .bg-ground { background-color: #E0C068; }
+  .bg-flying { background-color: #A890F0; }
+  .bg-psychic { background-color: #F85888; }
+  .bg-bug { background-color: #A8B820; }
+  .bg-rock { background-color: #B8A038; }
+  .bg-ghost { background-color: #705898; }
+  .bg-dragon { background-color: #7038F8; }
+  .bg-dark { background-color: #705848; }
+  .bg-steel { background-color: #B8B8D0; }
+  .bg-fairy { background-color: #EE99AC; }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.remove-btn');
+    
+    buttons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const pokemonId = button.dataset.id;
+        
+        try {
+          await fetch(`/api/favorites/${pokemonId}`, {
+            method: 'DELETE',
+          });
+          
+          // Remove the card from the UI
+          const card = button.closest('.bg-white');
+          card.remove();
+          
+          // If no more favorites, show message
+          const remainingCards = document.querySelectorAll('.bg-white');
+          if (remainingCards.length === 0) {
+            const container = document.querySelector('.grid');
+            container.innerHTML = `
+              <div class="col-span-full bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
+                <p>You haven't saved any favorites yet. Go to the dashboard to add some!</p>
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+    });
+  });
+</script>

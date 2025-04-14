@@ -1,0 +1,141 @@
+<div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+  <div class="md:flex">
+    <div class="md:flex-shrink-0 bg-gray-100 p-6 flex items-center justify-center">
+      <img class="h-48 w-48" src="<%= pokemon.sprite %>" alt="<%= pokemon.name %>">
+    </div>
+    
+    <div class="p-8 w-full">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="capitalize text-3xl font-bold text-gray-900 mb-2"><%= pokemon.name %></h1>
+          <p class="text-gray-600">#<%= pokemon.id.toString().padStart(3, '0') %></p>
+        </div>
+        
+        <% if (locals.user) { %>
+          <button 
+            id="favorite-btn"
+            data-id="<%= pokemon.id %>"
+            data-name="<%= pokemon.name %>"
+            data-sprite="<%= pokemon.sprite %>"
+            data-types='<%= JSON.stringify(pokemon.types) %>'
+            class="px-4 py-2 rounded-md <%= isFavorite ? 'bg-gray-300 text-gray-700' : 'bg-yellow-400 hover:bg-yellow-500 text-gray-800' %>"
+          >
+            <%= isFavorite ? 'Remove from Favorites' : 'Add to Favorites' %>
+          </button>
+        <% } %>
+      </div>
+      
+      <div class="mt-4 flex gap-2">
+        <% pokemon.types.forEach(type => { %>
+          <span class="px-3 py-1 text-sm font-semibold rounded-full text-white bg-<%= type %>">
+            <%= type %>
+          </span>
+        <% }) %>
+      </div>
+      
+      <div class="mt-6 grid grid-cols-2 gap-4">
+        <div>
+          <h2 class="text-lg font-semibold mb-2">Physical</h2>
+          <p><span class="font-medium">Height:</span> <%= pokemon.height %> m</p>
+          <p><span class="font-medium">Weight:</span> <%= pokemon.weight %> kg</p>
+        </div>
+        
+        <div>
+          <h2 class="text-lg font-semibold mb-2">Abilities</h2>
+          <ul class="list-disc list-inside">
+            <% pokemon.abilities.forEach(ability => { %>
+              <li class="capitalize"><%= ability.replace('-', ' ') %></li>
+            <% }) %>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="mt-6">
+        <h2 class="text-lg font-semibold mb-2">Base Stats</h2>
+        <div class="space-y-2">
+          <% pokemon.stats.forEach(stat => { %>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700 capitalize"><%= stat.name.replace('-', ' ') %></span>
+                <span class="text-sm font-medium text-gray-700"><%= stat.value %>/255</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-blue-600 h-2.5 rounded-full" style="width: <%= (stat.value / 255) * 100 %>%"></div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bg-normal { background-color: #A8A878; }
+  .bg-fire { background-color: #F08030; }
+  .bg-water { background-color: #6890F0; }
+  .bg-grass { background-color: #78C850; }
+  .bg-electric { background-color: #F8D030; }
+  .bg-ice { background-color: #98D8D8; }
+  .bg-fighting { background-color: #C03028; }
+  .bg-poison { background-color: #A040A0; }
+  .bg-ground { background-color: #E0C068; }
+  .bg-flying { background-color: #A890F0; }
+  .bg-psychic { background-color: #F85888; }
+  .bg-bug { background-color: #A8B820; }
+  .bg-rock { background-color: #B8A038; }
+  .bg-ghost { background-color: #705898; }
+  .bg-dragon { background-color: #7038F8; }
+  .bg-dark { background-color: #705848; }
+  .bg-steel { background-color: #B8B8D0; }
+  .bg-fairy { background-color: #EE99AC; }
+</style>
+
+<% if (locals.user) { %>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const favoriteBtn = document.getElementById('favorite-btn');
+    
+    if (favoriteBtn) {
+      favoriteBtn.addEventListener('click', async () => {
+        const pokemonId = favoriteBtn.dataset.id;
+        const name = favoriteBtn.dataset.name;
+        const sprite = favoriteBtn.dataset.sprite;
+        const types = JSON.parse(favoriteBtn.dataset.types);
+        const isFavorite = favoriteBtn.textContent.trim() === 'Remove from Favorites';
+        
+        try {
+          if (isFavorite) {
+            // Remove from favorites
+            await fetch(`/api/favorites/${pokemonId}`, {
+              method: 'DELETE',
+            });
+            favoriteBtn.textContent = 'Add to Favorites';
+            favoriteBtn.classList.remove('bg-gray-300', 'text-gray-700');
+            favoriteBtn.classList.add('bg-yellow-400', 'hover:bg-yellow-500', 'text-gray-800');
+          } else {
+            // Add to favorites
+            await fetch('/api/favorites', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                pokemonId,
+                name,
+                sprite,
+                types
+              }),
+            });
+            favoriteBtn.textContent = 'Remove from Favorites';
+            favoriteBtn.classList.remove('bg-yellow-400', 'hover:bg-yellow-500', 'text-gray-800');
+            favoriteBtn.classList.add('bg-gray-300', 'text-gray-700');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+    }
+  });
+</script>
+<% } %>

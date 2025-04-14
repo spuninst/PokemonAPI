@@ -1,0 +1,73 @@
+<h1 class="text-2xl font-bold mb-6">Your Activity Timeline</h1>
+
+<% if (locals.error) { %>
+  <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+    <p><%= error %></p>
+  </div>
+<% } %>
+
+<% if (activities.length === 0) { %>
+  <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
+    <p>No activity recorded yet. Start exploring Pokémon!</p>
+  </div>
+<% } else { %>
+  <div class="space-y-6 my-8">
+    <% 
+    // Group activities by date
+    let groupedActivities = {};
+    activities.forEach(activity => {
+      const date = new Date(activity.timestamp).toLocaleDateString();
+      if (!groupedActivities[date]) {
+        groupedActivities[date] = [];
+      }
+      groupedActivities[date].push(activity);
+    });
+    
+    // Sort dates in descending order
+    const sortedDates = Object.keys(groupedActivities).sort((a, b) => {
+      return new Date(b) - new Date(a);
+    });
+    %>
+    
+    <% sortedDates.forEach(date => { %>
+      <div class="mb-8">
+        <h2 class="text-lg font-semibold bg-gray-100 p-2 rounded-md mb-4"><%= date %></h2>
+        
+        <div class="border-l-2 border-gray-200 ml-4 space-y-4">
+          <% groupedActivities[date].forEach(activity => { %>
+            <div class="ml-6 relative pb-4">
+              <div class="absolute -left-8 mt-1 w-4 h-4 rounded-full bg-blue-500"></div>
+              
+              <div class="flex items-baseline">
+                <span class="text-sm text-white mr-2"><%= new Date(activity.timestamp).toLocaleTimeString() %></span>
+                
+                <% if (activity.type === 'login') { %>
+                  <span>You logged in</span>
+                <% } else if (activity.type === 'signup') { %>
+                  <span>You created your account</span>
+                <% } else if (activity.type === 'add_favorite') { %>
+                  <span>You added <span class="font-medium capitalize"><%= activity.pokemonName %></span> to favorites</span>
+                  <% if (activity.pokemonId) { %>
+                    <img src="/api/pokemon/<%= activity.pokemonId %>/sprite" alt="<%= activity.pokemonName %>" class="inline-block h-6 w-6 ml-2">
+                  <% } %>
+                <% } else if (activity.type === 'remove_favorite') { %>
+                  <span>You removed <span class="font-medium capitalize"><%= activity.pokemonName %></span> from favorites</span>
+                  <% if (activity.pokemonId) { %>
+                    <img src="/api/pokemon/<%= activity.pokemonId %>/sprite" alt="<%= activity.pokemonName %>" class="inline-block h-6 w-6 ml-2">
+                  <% } %>
+                <% } else if (activity.type === 'view_pokemon') { %>
+                  <span>You viewed <span class="font-medium capitalize"><%= activity.pokemonName %></span></span>
+                  <% if (activity.pokemonId) { %>
+                    <img src="/api/pokemon/<%= activity.pokemonId %>/sprite" alt="<%= activity.pokemonName %>" class="inline-block h-6 w-6 ml-2">
+                  <% } %>
+                <% } else { %>
+                  <span><%= activity.type %></span>
+                <% } %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } %>
