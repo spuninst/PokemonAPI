@@ -54,12 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Submitting login form");
 
         const requestData = { username, password };
-        console.log(
-          "Sending data to /api/api/login:",
-          JSON.stringify(requestData)
-        );
+        console.log("Sending data to /api/login:", JSON.stringify(requestData));
 
-        const res = await fetch(`/api/api/login`, {
+        const res = await fetch(`/api/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestData),

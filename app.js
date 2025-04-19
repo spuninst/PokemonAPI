@@ -7,6 +7,7 @@ const userRoutes = require("./routes/userRoutes");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
+const User = require("./models/user");
 
 // Load environment variables
 require("dotenv").config();
@@ -23,6 +24,49 @@ const port = process.env.PORT || 3000;
 
 // Connect to MongoDB
 connectDB();
+
+// Add this directly in app.js before the static files middleware
+app.post("/api/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Find user by username
+    const user = await User.findOne({ username });
+
+    if (!user || !user.validatePassword(password)) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Set cookie with token
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Return success with user info
+    return res.json({
+      success: true,
+      userId: user._id,
+      username: user.username,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    return res
+      .status(500)
+      .json({ error: "Internal server error during login" });
+  }
+});
+
+app.post("/test-api", (req, res) => {
+  res.json({ message: "Test API working" });
+});
 
 // Middleware
 app.use(express.json());
@@ -53,22 +97,23 @@ const isAuthenticated = (req, res, next) => {
   }
 
   // Not authenticated, redirect to login
-  res.redirect("/api/login");
+  res.redirect("/login-page");
 };
+
+// API Routes - must be defined BEFORE static file middleware
+app.use("/api", authRoutes);
+app.use("/api/user", userRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
-
-// API Routes
-app.use("/api", authRoutes);
-app.use("/api/user", userRoutes);
 
 // Front-end Routes
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.get("/api/login", (req, res) => {
+// Login page route - renamed to avoid conflict with API
+app.get("/login-page", (req, res) => {
   // If already logged in (has valid auth cookie), redirect to registered page
   const token = req.cookies.authToken;
   if (token) {
@@ -86,7 +131,7 @@ app.get("/api/login", (req, res) => {
 
 app.get("/logout", (req, res) => {
   req.session.destroy();
-  res.redirect("/api/login");
+  res.redirect("/login-page");
 });
 
 app.get("/register", (req, res) => {
