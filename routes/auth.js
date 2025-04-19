@@ -9,24 +9,21 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 // POST /api/login - User login
 router.post("/login", async (req, res) => {
   try {
+    console.log("Login attempt for:", req.body.username);
+
     const { username, password } = req.body;
-
-    // Validate input
-    if (!username || !password) {
-      return res
-        .status(400)
-        .json({ error: "Username and password are required" });
-    }
-
     // Find user by username
     const user = await User.findOne({ username });
 
     if (!user) {
+      console.log("User not found in database");
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
+    console.log("User found, validating password");
     // Validate password
     const isValidPassword = user.validatePassword(password);
+    console.log("Password valid:", isValidPassword);
 
     if (!isValidPassword) {
       return res.status(401).json({ error: "Invalid username or password" });

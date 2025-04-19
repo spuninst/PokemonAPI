@@ -5,9 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pokémon App</title>
-    <link rel="icon" type="image/x-icon" href="/images/logo/pokeball.png" />
+    <link rel="icon" type="image/x-icon" href="#" />
     <script
-      src="https://kit.fontawesome.com/0fb81c7629.js"
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"
       crossorigin="anonymous"
     ></script>
     <link href="/css/styles.css" rel="stylesheet" />
@@ -87,7 +87,7 @@
         </div>
         <!-- this if for timeling -->
         <div class="nav-option" data-tooltip="Settings">
-          <a href="/activities">
+          <a href="#">
             <img src="/images/settings_icon.png" alt="Settings" />
           </a>
         </div>
@@ -228,7 +228,7 @@
             .catch((error) => {
               console.error("Authentication error:", error);
               // Redirect to login page
-              window.location.href = "/api/login";
+              window.location.href = "/login-page";
             });
         } else {
           // Update username display from session storage
@@ -293,7 +293,7 @@
             sessionStorage.removeItem("loggedIn");
 
             // Redirect to login page
-            window.location.href = "/api/login";
+            window.location.href = "/login-page";
           });
         });
 

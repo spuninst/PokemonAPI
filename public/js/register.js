@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Redirect to login page
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login-page";
         }, 2000);
       } catch (err) {
         console.error("Registration error:", err);
