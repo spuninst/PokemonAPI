@@ -25,10 +25,49 @@ const port = process.env.PORT || 3000;
 // Connect to MongoDB
 connectDB();
 
-// Add this directly in app.js before the static files middleware
+// IMPORTANT: Initialize middleware BEFORE defining routes
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+app.use(cookieParser());
+app.use(bodyParser.json()); // This is redundant with express.json() but keeping for compatibility
+
+// Middleware to check if user is logged in
+const isAuthenticated = (req, res, next) => {
+  // Check for auth token in cookies
+  const token = req.cookies.authToken;
+
+  if (token) {
+    try {
+      // Verify the token
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = { userId: decoded.userId };
+      return next();
+    } catch (error) {
+      console.error("Token verification failed:", error);
+    }
+  }
+
+  // For API requests, also check for user-id header as fallback
+  if (req.headers["user-id"]) {
+    return next();
+  }
+
+  // Not authenticated, redirect to login
+  res.redirect("/login-page");
+};
+
+// Add direct login route after middleware is initialized
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+
+    // Validate input
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username and password are required" });
+    }
 
     // Find user by username
     const user = await User.findOne({ username });
@@ -64,41 +103,11 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+// Test API endpoint
 app.post("/test-api", (req, res) => {
-  res.json({ message: "Test API working" });
+  console.log("Test API request body:", req.body);
+  res.json({ message: "Test API working", received: req.body });
 });
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use(cookieParser());
-app.use(bodyParser.json());
-
-// Middleware to check if user is logged in
-const isAuthenticated = (req, res, next) => {
-  // Check for auth token in cookies
-  const token = req.cookies.authToken;
-
-  if (token) {
-    try {
-      // Verify the token
-      const decoded = jwt.verify(token, JWT_SECRET);
-      req.user = { userId: decoded.userId };
-      return next();
-    } catch (error) {
-      console.error("Token verification failed:", error);
-    }
-  }
-
-  // For API requests, also check for user-id header as fallback
-  if (req.headers["user-id"]) {
-    return next();
-  }
-
-  // Not authenticated, redirect to login
-  res.redirect("/login-page");
-};
 
 // API Routes - must be defined BEFORE static file middleware
 app.use("/api", authRoutes);
