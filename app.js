@@ -194,5 +194,5 @@ app.use((err, req, res, next) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Pokédex app listening at http://localhost:${port}`);
+  console.log(`Pokémon app listening at http://localhost:${port}`);
 });
